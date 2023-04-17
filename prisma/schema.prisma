@@ -1,0 +1,122 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Agent {
+  id    String @id @default(uuid())
+  name  String
+  phone String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  investor   Investor @relation(fields: [investorId], references: [id])
+  investorId String
+}
+
+model Property {
+  id          String @id @default(uuid())
+  nameLatin   String
+  nameDigital String
+  floor       Int
+  direction   String
+  area        Float
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  investor   Investor @relation(fields: [investorId], references: [id])
+  investorId String
+}
+
+model Investor {
+  id    String  @id @default(uuid())
+  name  String
+  email String  @unique
+  code  Int     @unique @default(autoincrement())
+  phone String
+  agent Agent[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  user      User   @relation("updatedBy", fields: [updatedBy], references: [id])
+  updatedBy String
+
+  properties           Property[]
+  investments          Investment[]
+  Expensies            Expenses[]
+  maintenanceExpense   MaintenanceExpense @relation(fields: [maintenanceExpenseId], references: [id])
+  maintenanceExpenseId String             @unique
+}
+
+enum InvestmentType {
+  BONDS
+  CERTIFICATES
+}
+
+model Investment {
+  id String @id @default(uuid())
+
+  type                   InvestmentType
+  amount                 Float          @default(0.0)
+  interestRate           Float          @default(1.0)
+  createdAt              DateTime       @default(now())
+  redemptionDate         DateTime
+  bank                   String
+  earlyRedemptionPenalty Float?         @default(0.0)
+  customId               String?        @unique
+
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  investor   Investor @relation(fields: [investorId], references: [id])
+  investorId String
+
+  createdBy   User   @relation(fields: [createdById], references: [id])
+  createdById String
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Investment Investment[]
+  Investor   Investor[]   @relation("updatedBy")
+}
+
+model Expenses {
+  id            String @id @default(uuid())
+  name          String
+  amount        Float
+  forInvestorId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  paid        Boolean  @default(false)
+  forInvestor Investor @relation(fields: [forInvestorId], references: [id])
+}
+
+model MaintenanceExpense {
+  id        String    @id @default(uuid())
+  amount    Float
+  paid      Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  investors Investor?
+}

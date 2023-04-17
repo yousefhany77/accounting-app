@@ -1,0 +1,12 @@
+{
+  "extends": ["plugin:prettier/recommended", "plugin:@typescript-eslint/recommended", "prettier"],
+  "plugins": ["import", "@typescript-eslint", "prettier", "eslint-plugin-prettier"],
+  "rules": {
+    "prettier/prettier": ["error"],
+    "import/order": ["error"],
+    "import/newline-after-import": ["error"],
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": "error",
+    "no-console": ["error", { "allow": ["warn", "error"] }]
+  }
+}

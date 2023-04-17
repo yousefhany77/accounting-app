@@ -53,11 +53,10 @@ model Investor {
   user      User   @relation("updatedBy", fields: [updatedBy], references: [id])
   updatedBy String
 
-  properties           Property[]
-  investments          Investment[]
-  Expensies            Expenses[]
-  maintenanceExpense   MaintenanceExpense @relation(fields: [maintenanceExpenseId], references: [id])
-  maintenanceExpenseId String             @unique
+  properties         Property[]
+  investments        Investment[]
+  Expensies          Expenses[]
+  maintenanceExpense MaintenanceExpense?
 }
 
 enum InvestmentType {
@@ -113,10 +112,11 @@ model Expenses {
 }
 
 model MaintenanceExpense {
-  id        String    @id @default(uuid())
-  amount    Float
-  paid      Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  investors Investor?
+  id         String   @id @default(uuid())
+  amount     Float
+  paid       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  investors  Investor @relation(fields: [investorId], references: [id])
+  investorId String   @unique
 }

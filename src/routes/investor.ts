@@ -44,6 +44,17 @@ investorsRouter
   .all(handleMethodNotAllowed)
 
 investorsRouter
+  .route('/new')
+  .post(
+    asyncHandler(async (req, res) => {
+      const { email, name, updatedBy, code, phone } = req.body as SafeInvestor
+      const investor = await createInvestor({ email, name, updatedBy, code, phone })
+      res.status(201).json({ investor })
+    })
+  )
+  .all(handleMethodNotAllowed)
+
+investorsRouter
   .route('/:investorId')
   .get(
     asyncHandler(async (req, res) => {
@@ -56,25 +67,13 @@ investorsRouter
   .all(handleMethodNotAllowed)
 
 investorsRouter
-  .route('/new')
-  .post(
-    asyncHandler(async (req, res) => {
-      const { email, maintenanceExpenseId, name, updatedBy, code, phone } = req.body as SafeInvestor
-      const investor = await createInvestor({ email, maintenanceExpenseId, name, updatedBy, code, phone })
-      res.status(201).json({ investor })
-    })
-  )
-  .all(handleMethodNotAllowed)
-
-investorsRouter
   .route('/update/:investorId')
   .patch(
     asyncHandler(async (req, res) => {
       const { investorId } = req.params
-      const { email, maintenanceExpenseId, name, updatedBy, code, phone, deletedAt } = req.body as SafeInvestor
+      const { email, name, updatedBy, code, phone, deletedAt } = req.body as SafeInvestor
       const investor = await updateInvestor(investorId, {
         email,
-        maintenanceExpenseId,
         name,
         updatedBy,
         code,

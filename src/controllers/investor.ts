@@ -56,13 +56,43 @@ export type SafeInvestor = OmitMultiple<Investor, 'id' | 'createdAt' | 'updatedA
   deletedAt?: Date | null
 }
 
+type SafeInvestorSchema = z.ZodType<SafeInvestor>
 const investorSchema = z.object({
-  name: z.string().min(1).max(255),
-  email: z.string().email(),
-  code: z.string().optional(),
-  updatedBy: z.string().uuid(),
-  maintenanceExpenseId: z.string().uuid(),
-})
+  name: z
+    .string({
+      invalid_type_error: 'Name must be a string',
+      required_error: 'Name is Required',
+    })
+    .min(2)
+    .max(255),
+  email: z
+    .string({
+      invalid_type_error: 'Email must be a string',
+      required_error: 'Email is Required',
+    })
+    .email({
+      message: 'Invalid email',
+    }),
+  code: z.number({
+    invalid_type_error: 'Code must be a number',
+    required_error: 'Code is Required',
+  }),
+  updatedBy: z
+    .string({
+      invalid_type_error: 'UpdatedBy must be a UUID',
+      required_error: 'UpdatedBy is Required',
+    })
+    .uuid(),
+  phone: z
+    .string()
+    .min(10, {
+      message: 'Number must be at least 10 digits',
+    })
+    .max(12, {
+      message: 'Number must be less than 12 digits',
+    }),
+  deletedAt: z.date().nullish(),
+}) satisfies SafeInvestorSchema
 
 export const createInvestor = async (investor: SafeInvestor) => {
   try {
@@ -71,9 +101,26 @@ export const createInvestor = async (investor: SafeInvestor) => {
       const errors = data.error.flatten().fieldErrors
       throw new HttpError('BAD_REQUEST', `Invalid data: ${Object.values(errors).join(', ')}`)
     }
+
+    /*
+     * each investor should have a maintenance expense.
+     * the value is calculated by the total area of the building multiplied by the maintenance expense rate.
+     * we can't make it required in the schema because we can't calc the area without the querying properties the investor own.
+     * so we'll create it here.
+     * and updated it when the investor update his properties.
+     */
+
     const createdInvestor = await prisma.investor.create({
-      data: investor,
+      data: {
+        ...investor,
+        maintenanceExpense: {
+          create: {
+            amount: 0,
+          },
+        },
+      },
     })
+
     return createdInvestor
   } catch (error: unknown) {
     handleAsyncError(error)

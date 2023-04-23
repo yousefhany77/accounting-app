@@ -64,6 +64,11 @@ export const buyProperty = async (id: string, investorId: string) => {
       },
       data: {
         investorId,
+        MaintenanceExpense: {
+          connect: {
+            investorId,
+          },
+        },
       },
     })
     return property
@@ -81,6 +86,11 @@ export const sellProperty = async (id: string, investorId?: string) => {
       },
       data: {
         investorId: investorId || null,
+        MaintenanceExpense: {
+          update: {
+            investorId: null,
+          },
+        },
       },
     })
     return property

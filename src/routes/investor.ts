@@ -1,7 +1,6 @@
 import express from 'express'
 import asyncHandler from 'express-async-handler'
 import {
-  SafeInvestor,
   createInvestor,
   deleteInvestor,
   getAllInvestorsPaginated,
@@ -47,8 +46,7 @@ investorsRouter
   .route('/new')
   .post(
     asyncHandler(async (req, res) => {
-      const { email, name, updatedBy, code, phone, address, bank } = req.body as SafeInvestor
-      const investor = await createInvestor({ email, name, updatedBy, code, phone, address, bank })
+      const investor = await createInvestor(req.body)
       res.status(201).json({ investor })
     })
   )
@@ -64,32 +62,16 @@ investorsRouter
       res.status(200).json({ investor })
     })
   )
-  .all(handleMethodNotAllowed)
-
-investorsRouter
-  .route('/update/:investorId')
   .patch(
     asyncHandler(async (req, res) => {
       const { investorId } = req.params
-      const { email, name, updatedBy, code, phone, deletedAt } = req.body as SafeInvestor
-      const investor = await updateInvestor(investorId, {
-        email,
-        name,
-        updatedBy,
-        code,
-        phone,
-        deletedAt,
-      })
+      const investor = await updateInvestor(investorId, req.body)
       res.status(200).json({ investor })
     })
   )
-  .all(handleMethodNotAllowed)
-
-// Delete an investor, if hard is true, the investor will be deleted permanently. Otherwise, it will be soft deleted
-investorsRouter
-  .route('/delete/:investorId')
   .delete(
     asyncHandler(async (req, res) => {
+      // Delete an investor, if hard is true, the investor will be deleted permanently. Otherwise, it will be soft deleted
       const { investorId } = req.params
       const { hard } = req.query as { hard?: boolean }
       const investor = await deleteInvestor(investorId, hard)

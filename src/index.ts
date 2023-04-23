@@ -4,6 +4,7 @@ import express from 'express'
 import helmet from 'helmet'
 import morgan from 'morgan'
 import { HttpError, errorHandler } from './middleware/errorHandler'
+import { expensesRouter } from './routes/expense'
 import investorsRouter from './routes/investor'
 
 config()
@@ -25,7 +26,7 @@ app.get('/', (req, res) => {
 })
 
 app.use('/investor', investorsRouter)
-
+app.use('/expense', expensesRouter)
 app.all('/', () => {
   throw new HttpError('METHOD_NOT_ALLOWED', 'Method Not Allowed')
 })

@@ -47,8 +47,8 @@ investorsRouter
   .route('/new')
   .post(
     asyncHandler(async (req, res) => {
-      const { email, name, updatedBy, code, phone } = req.body as SafeInvestor
-      const investor = await createInvestor({ email, name, updatedBy, code, phone })
+      const { email, name, updatedBy, code, phone, address, bank } = req.body as SafeInvestor
+      const investor = await createInvestor({ email, name, updatedBy, code, phone, address, bank })
       res.status(201).json({ investor })
     })
   )

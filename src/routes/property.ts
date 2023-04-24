@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import asyncHandler from 'express-async-handler'
-import { buyProperty, createProperty, sellProperty, updateProperty } from '../controllers/property'
+import { buyProperty, createProperty, getProperty, sellProperty, updateProperty } from '../controllers/property'
 import { handleMethodNotAllowed } from '../middleware/handleMethodNotAllowed'
 
 export const propertyRouter = Router()
@@ -11,6 +11,17 @@ propertyRouter
     asyncHandler(async (req, res) => {
       const createdProperty = await createProperty(req.body)
       res.status(201).json(createdProperty)
+    })
+  )
+  .all(handleMethodNotAllowed)
+
+propertyRouter
+  .route('/:propertyId')
+  .get(
+    asyncHandler(async (req, res) => {
+      const { propertyId } = req.params
+      const property = await getProperty(propertyId)
+      res.status(200).json(property)
     })
   )
   .all(handleMethodNotAllowed)

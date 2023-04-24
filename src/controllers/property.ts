@@ -56,6 +56,36 @@ export const updateProperty = async (id: string, updatedValues: Partial<SafeProp
   }
 }
 
+export const getProperty = async (id: string) => {
+  try {
+    isValidUUID(id)
+    const property = await prisma.property.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        investor: {
+          select: {
+            name: true,
+            code: true,
+            id: true,
+          },
+        },
+        _count: true,
+        MaintenanceExpense: {
+          select: {
+            id: true,
+            amount: true,
+          },
+        },
+      },
+    })
+    return property
+  } catch (error: unknown) {
+    handleAsyncError(error)
+  }
+}
+
 export const buyProperty = async (propertyId: string, investorId: string) => {
   try {
     const data = z

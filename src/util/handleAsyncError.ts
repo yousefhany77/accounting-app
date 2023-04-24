@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client'
+import { ZodError } from 'zod'
 import { HttpError } from '../middleware/errorHandler'
 import { prismaError } from './getPrismaErrorMessage'
 
@@ -10,6 +11,9 @@ export const handleAsyncError = (error: unknown) => {
   // this will be handled by the errorHandler middleware in case of an unexpected error with prisma
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     throw new prismaError(error)
+  }
+  if (error instanceof ZodError) {
+    throw new HttpError('BAD_REQUEST', error.issues.map((issue) => issue.message).join('\n'))
   }
   if (error instanceof Error) {
     throw new Error(error.message)

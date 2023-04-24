@@ -2,6 +2,7 @@ import { Expenses, MaintenanceExpense } from '@prisma/client'
 import z from 'zod'
 import prisma from '../db'
 import { HttpError } from '../middleware/errorHandler'
+import { enhanceZodErrorMessage } from '../util/enhanceZodErrorMessage'
 import { handleAsyncError } from '../util/handleAsyncError'
 import { UUID, expenseSchema } from '../util/shared/schema'
 import { OmitMultiple } from '../util/types'
@@ -59,7 +60,7 @@ export const getAllMaintenancesExpenseBy = async ({
       propertyId,
     })
     if (!data.success) {
-      const errors = data.error.flatten().fieldErrors
+      const errors = enhanceZodErrorMessage(data.error)
       throw new HttpError('BAD_REQUEST', `Invalid data: ${Object.values(errors).join(', ')}`)
     }
     const maintenanceExpense = await prisma.maintenanceExpense.findMany({
@@ -105,7 +106,7 @@ export const payMaintenanceExpense = async ({
       })
       .safeParse(paid)
     if (!data.success) {
-      const errors = data.error.flatten().fieldErrors
+      const errors = enhanceZodErrorMessage(data.error)
       throw new HttpError('BAD_REQUEST', `Invalid data: ${Object.values(errors).join(', ')}`)
     }
     // check if the maintenanceExpense is related to the investor
@@ -150,7 +151,7 @@ export const createExpense = async (expense: SafeExpense) => {
   try {
     const data = expenseSchema.safeParse(expense)
     if (!data.success) {
-      const errors = data.error.flatten().fieldErrors
+      const errors = enhanceZodErrorMessage(data.error)
       throw new HttpError('BAD_REQUEST', `Invalid data: ${Object.values(errors).join(', ')}`)
     }
     const newExpense = await prisma.expenses.create({
@@ -187,7 +188,7 @@ export const getAllExpenseBy = async ({ investorId, expenseId }: { investorId?: 
       .partial()
       .safeParse({ investorId, expenseId })
     if (!data.success) {
-      const errors = data.error.flatten().fieldErrors
+      const errors = enhanceZodErrorMessage(data.error)
       throw new HttpError('BAD_REQUEST', `Invalid data: ${Object.values(errors).join(', ')}`)
     }
     const expense = await prisma.expenses.findMany({
@@ -237,7 +238,7 @@ export const updateExpense = async (updatedValues: Partial<Omit<SafeExpense, 'pa
     isValidUUID(id)
     const data = expenseSchema.partial().safeParse(updatedValues)
     if (!data.success) {
-      const errors = data.error.flatten().fieldErrors
+      const errors = enhanceZodErrorMessage(data.error)
       throw new HttpError('BAD_REQUEST', `Invalid data: ${Object.values(errors).join(', ')}`)
     }
 
@@ -266,7 +267,7 @@ export const payCustomExpense = async ({ expenseId, paidAmount }: { expenseId: s
       })
       .safeParse(paidAmount)
     if (!data.success) {
-      const errors = data.error.flatten().fieldErrors
+      const errors = enhanceZodErrorMessage(data.error)
       throw new HttpError('BAD_REQUEST', `Invalid data: ${Object.values(errors).join(', ')}`)
     }
     const originalExpense = await prisma.expenses.findUniqueOrThrow({

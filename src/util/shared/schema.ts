@@ -13,15 +13,13 @@ export const BankDataSchema = z.object({
     })
     .min(2)
     .max(255),
-  accountNumber: z.object({
-    accountNumber: z
-      .string({
-        invalid_type_error: 'Account Number must be a string',
-        required_error: 'Account Number is Required',
-      })
-      .min(2)
-      .max(255),
-  }),
+  accountNumber: z
+    .string({
+      invalid_type_error: 'Account Number must be a string',
+      required_error: 'Account Number is Required',
+    })
+    .min(2)
+    .max(255),
 })
 
 /** Document Zod Schema */
@@ -154,7 +152,10 @@ export const investorSchema = z.object({
     })
     .uuid(),
   phone: z
-    .string()
+    .string({
+      required_error: 'Phone is Required',
+      invalid_type_error: 'Phone not valid',
+    })
     .min(10, {
       message: 'Number must be at least 10 digits',
     })
@@ -162,10 +163,21 @@ export const investorSchema = z.object({
       message: 'Number must be less than 12 digits',
     }),
   deletedAt: z.date().nullish(),
-  bank: BankDataSchema.array().min(1, {
-    message: 'Bank data must have at least one entry',
-  }),
-  address: z.string().min(2).max(255),
+  bank: z
+    .array(BankDataSchema, {
+      invalid_type_error: 'Bank data must be in array',
+      required_error: 'Bank is Required',
+    })
+    .min(1, {
+      message: 'Bank must have at least one entry',
+    }),
+  address: z
+    .string({
+      invalid_type_error: 'Address must be a string',
+      required_error: 'Address is Required',
+    })
+    .min(2)
+    .max(255),
 }) satisfies SafeInvestorSchema
 
 export type SafeProperty = OmitMultiple<

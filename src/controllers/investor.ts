@@ -5,6 +5,7 @@ import { handleAsyncError } from '../util/handleAsyncError'
 import { investorSchema } from '../util/shared/schema'
 import { OmitMultiple } from '../util/types'
 import { isValidUUID } from '../util/validateUUID'
+import { enhanceZodErrorMessage } from '../util/enhanceZodErrorMessage'
 
 export type SafeInvestor = OmitMultiple<Investor, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'> & {
   /** use the DeletedAt if the value is null then the investor is not deleted it will be fetched with the rest of investors  */
@@ -66,7 +67,7 @@ export const createInvestor = async (investor: SafeInvestor) => {
   try {
     const data = investorSchema.safeParse(investor)
     if (!data.success) {
-      const errors = data.error.flatten().fieldErrors
+      const errors = enhanceZodErrorMessage(data.error)
       throw new HttpError('BAD_REQUEST', `Invalid data: ${Object.values(errors).join(', ')}`)
     }
 
@@ -85,7 +86,7 @@ export const updateInvestor = async (id: string, updatedValues: Partial<SafeInve
     const data = investorSchema.partial().safeParse(updatedValues)
     isValidUUID(id)
     if (!data.success) {
-      const errors = data.error.flatten().fieldErrors
+      const errors = enhanceZodErrorMessage(data.error)
       throw new HttpError('BAD_REQUEST', `Invalid data: ${Object.values(errors).join(', ')}`)
     }
     const investor = await prisma.investor.update({

@@ -1,15 +1,24 @@
+import { z } from 'zod'
 import prisma from '../db'
 import { HttpError } from '../middleware/errorHandler'
+import { enhanceZodErrorMessage } from '../util/enhanceZodErrorMessage'
 import { handleAsyncError } from '../util/handleAsyncError'
-import { SafeAgent, agentSchema } from '../util/shared/schema'
+import { SafeAgent, UUID, agentSchema } from '../util/shared/schema'
 import { isValidUUID } from '../util/validateUUID'
+
+/**
+ *
+ * The Agent resource is linked to the Investor resource.
+ * The Agent handles the communication between investor and the company.
+ * The investor changes the agent frequently. The agent is not deleted, but soft deleted from the investor (business requirement).
+ */
 
 export const createAgent = async (agent: SafeAgent) => {
   try {
     const data = agentSchema.safeParse(agent)
     if (!data.success) {
-      const errors = data.error.flatten().fieldErrors
-      throw new HttpError('BAD_REQUEST', `Invalid data: ${Object.values(errors).join(', ')}`)
+      const errors = enhanceZodErrorMessage(data.error)
+      throw new HttpError('BAD_REQUEST', `Invalid data: ${errors}`)
     }
     const newAgent = await prisma.agent.create({
       data: agent,
@@ -33,9 +42,10 @@ export const getAgentById = async (id: string) => {
     handleAsyncError(error)
   }
 }
-
+/** soft Delete Agent */
 export const unlinkAgentFromInvestor = async (agentId: string) => {
   try {
+    isValidUUID(agentId)
     // soft delete the agent (this is a business rule)
     const updatedAgent = await prisma.agent.update({
       where: {
@@ -51,12 +61,21 @@ export const unlinkAgentFromInvestor = async (agentId: string) => {
   }
 }
 
-export const linkAgentToInvestor = async (agentId: string, Investor: string) => {
+export const linkAgentToInvestor = async (agentId: string, investorId: string) => {
   try {
-    isValidUUID(agentId) && isValidUUID(Investor)
+    const data = z
+      .object({
+        agentId: UUID,
+        investorId: UUID,
+      })
+      .safeParse({ agentId, investorId })
+    if (!data.success) {
+      const errors = enhanceZodErrorMessage(data.error)
+      throw new HttpError('BAD_REQUEST', `Invalid data: ${errors.join(', ')}`)
+    }
     const updatedInvestor = await prisma.investor.update({
       where: {
-        id: Investor,
+        id: investorId,
       },
       data: {
         agent: {

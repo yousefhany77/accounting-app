@@ -25,7 +25,7 @@ investorsRouter
     asyncHandler(async (req, res) => {
       const page = Number(req.query.page) || 1
       const investors = await getAllInvestorsPaginated(page)
-      res.status(200).json({ investors })
+      res.status(200).json(investors)
     })
   )
   .all(handleMethodNotAllowed)
@@ -37,7 +37,7 @@ investorsRouter
     asyncHandler(async (req, res) => {
       const page = Number(req.query.page) || 1
       const investors = await getAllInvestorsPaginated(page, true)
-      res.status(200).json({ investors })
+      res.status(200).json(investors)
     })
   )
   .all(handleMethodNotAllowed)
@@ -47,7 +47,7 @@ investorsRouter
   .post(
     asyncHandler(async (req, res) => {
       const investor = await createInvestor(req.body)
-      res.status(201).json({ investor })
+      res.status(201).json(investor)
     })
   )
   .all(handleMethodNotAllowed)
@@ -59,14 +59,14 @@ investorsRouter
       const { investorId } = req.params
 
       const investor = await getInvestorById(investorId.toString())
-      res.status(200).json({ investor })
+      res.status(200).json(investor)
     })
   )
   .patch(
     asyncHandler(async (req, res) => {
       const { investorId } = req.params
       const investor = await updateInvestor(investorId, req.body)
-      res.status(200).json({ investor })
+      res.status(200).json(investor)
     })
   )
   .delete(
@@ -75,7 +75,7 @@ investorsRouter
       const { investorId } = req.params
       const { hard } = req.query as { hard?: boolean }
       const investor = await deleteInvestor(investorId, hard)
-      res.status(200).json({ investor })
+      res.status(200).json(investor)
     })
   )
   .all(handleMethodNotAllowed)

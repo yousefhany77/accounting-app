@@ -4,8 +4,11 @@ import express from 'express'
 import helmet from 'helmet'
 import morgan from 'morgan'
 import { HttpError, errorHandler } from './middleware/errorHandler'
+import { handleMethodNotAllowed } from './middleware/handleMethodNotAllowed'
+import { agentRouter } from './routes/agent'
 import { expensesRouter } from './routes/expense'
 import investorsRouter from './routes/investor'
+import { propertyRouter } from './routes/property'
 
 config()
 const app = express()
@@ -21,15 +24,11 @@ app.use(morgan('dev'))
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
-
 app.use('/investor', investorsRouter)
 app.use('/expense', expensesRouter)
-app.all('/', () => {
-  throw new HttpError('METHOD_NOT_ALLOWED', 'Method Not Allowed')
-})
+app.use('/property', propertyRouter)
+app.use('/agent', agentRouter)
+app.all('/', handleMethodNotAllowed)
 
 app.all('/*', (req) => {
   throw new HttpError('NOT_FOUND', req.originalUrl + ' Not Found')

@@ -33,7 +33,7 @@ expensesRouter
     asyncHandler(async (req, res) => {
       const { id } = req.params
       const expense = await getMaintenancesExpenseById(id)
-      res.status(200).json({ expense })
+      res.status(200).json(expense)
     })
   )
   .all(handleMethodNotAllowed)
@@ -52,7 +52,7 @@ expensesRouter
       }
       const exp = await payMaintenanceExpense(expense)
       // Todo: upload a new Document to the file system and link it to the expense
-      res.status(200).json({ exp })
+      res.status(200).json(exp)
     })
   )
   .all(handleMethodNotAllowed)
@@ -66,7 +66,7 @@ expensesRouter
     asyncHandler(async (req, res) => {
       const { id } = req.params
       const expense = await getExpenseById(id)
-      res.status(200).json({ expense })
+      res.status(200).json(expense)
     })
   )
   .patch(
@@ -76,14 +76,14 @@ expensesRouter
         id,
         ...req.body,
       })
-      res.status(200).json({ updated })
+      res.status(200).json(updated)
     })
   )
   .delete(
     asyncHandler(async (req, res) => {
       const { id } = req.params
       const deleted = await deleteExpense(id, req.body.hardDelete)
-      res.status(200).json({ deleted })
+      res.status(200).json(deleted)
     })
   )
   .all(handleMethodNotAllowed)
@@ -94,7 +94,7 @@ expensesRouter
     asyncHandler(async (req, res) => {
       const { name, amount, paid, forInvestorId } = req.body as SafeExpense
       const expense = await createExpense({ name, amount, paid, forInvestorId })
-      res.status(201).json({ expense })
+      res.status(201).json(expense)
     })
   )
   .all(handleMethodNotAllowed)
@@ -113,7 +113,7 @@ expensesRouter
       // payment is implemented as an update
       const exp = await payCustomExpense(expense)
       // Todo: upload a new Document to the file system and link it to the expense
-      res.status(200).json({ exp })
+      res.status(200).json(exp)
     })
   )
   .all(handleMethodNotAllowed)
@@ -130,10 +130,10 @@ expensesRouter
       switch (type) {
         case 'maintenance':
           const maintenanceExpenses = await getAllMaintenancesExpenseBy(req.body)
-          res.status(200).json({ maintenanceExpenses })
+          res.status(200).json(maintenanceExpenses)
         case 'custom':
           const customExpenses = await getAllExpenseBy(req.body)
-          res.status(200).json({ customExpenses })
+          res.status(200).json(customExpenses)
         default:
           throw new HttpError('BAD_REQUEST', "Invalid type. It must be 'maintenance' or 'custom'")
       }
@@ -149,10 +149,10 @@ expensesRouter
       switch (type) {
         case 'maintenance':
           const maintenanceExpense = await getMaintenancesExpenseById(req.body)
-          res.status(200).json({ maintenanceExpense })
+          res.status(200).json(maintenanceExpense)
         case 'custom':
           const customExpense = await getExpenseById(req.body)
-          res.status(200).json({ customExpense })
+          res.status(200).json(customExpense)
         default:
           throw new HttpError('BAD_REQUEST', "Invalid type. It must be 'maintenance' or 'custom'")
       }

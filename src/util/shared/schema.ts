@@ -1,6 +1,5 @@
-import { Agent, Property } from '@prisma/client'
+import { Agent, Investment, InvestmentType } from '@prisma/client'
 import z from 'zod'
-import { SafeExpenseSchema, SafeMaintenanceExpense } from '../../controllers/expense'
 import { SafeInvestor } from '../../controllers/investor'
 import { OmitMultiple } from '../types'
 
@@ -53,75 +52,6 @@ export const UUID = z
   .uuid({
     message: 'Id must be a valid UUID',
   })
-
-/** maintenanceExpense Zod Schema */
-export const maintenanceExpenseSchema = z.object({
-  amount: z
-    .number({
-      invalid_type_error: 'Expense Amount must be a number',
-      required_error: 'Expense Amount is Required',
-    })
-    .positive({
-      message: 'Expense Amount must be a positive number',
-    })
-    .min(1, {
-      message: 'Expense Amount must be greater than 0',
-    }),
-  paid: z
-    .number({
-      invalid_type_error: 'Expense Paid must be a Number',
-      required_error: 'Expense Paid is Required',
-    })
-    .positive({
-      message: 'Expense Paid must be a positive number',
-    })
-    .min(1, {
-      message: 'Expense Paid must be greater than 0',
-    }),
-  propertyId: UUID,
-  investorId: UUID.nullable(),
-}) satisfies z.ZodType<SafeMaintenanceExpense>
-
-/** Expense Zod Schema */
-export const expenseSchema = z.object({
-  name: z
-    .string({
-      invalid_type_error: 'Expense Name must be a string',
-      required_error: 'Expense Name is Required',
-    })
-    .min(2),
-
-  amount: z
-    .number({
-      invalid_type_error: 'Expense Amount must be a number',
-      required_error: 'Expense Amount is Required',
-    })
-    .positive({
-      message: 'Expense Amount must be a positive number',
-    })
-    .min(1, {
-      message: 'Expense Amount must be greater than 0',
-    }),
-  paid: z
-    .number({
-      invalid_type_error: 'Expense Paid must be a Number',
-      required_error: 'Expense Paid is Required',
-    })
-    .positive({
-      message: 'Expense Paid must be a positive number',
-    })
-    .min(1, {
-      message: 'Expense Paid must be greater than 0',
-    }),
-  forInvestorId: z
-    .string({
-      invalid_type_error: 'Expense Investor Id must be a UUID',
-      required_error: 'Investor Id is Required',
-    })
-    .uuid({
-      message: 'Investor Id must be a valid UUID',
-    }),
-}) satisfies SafeExpenseSchema
 
 type SafeInvestorSchema = z.ZodType<SafeInvestor>
 /** Investor Zod Schema */
@@ -178,51 +108,11 @@ export const investorSchema = z.object({
     })
     .min(2)
     .max(255),
+  balance: z.number({
+    invalid_type_error: 'Balance must be a number',
+    required_error: 'Balance is Required',
+  }),
 }) satisfies SafeInvestorSchema
-
-export type SafeProperty = OmitMultiple<
-  Property,
-  'updatedAt' | 'createdAt' | 'deletedAt' | 'id' | 'investorId' | 'elevators'
-> & {
-  elevators?: string[]
-}
-type SafePropertySchema = z.ZodType<SafeProperty>
-/** Property Zod Schema */
-export const propertySchema = z.object({
-  latinName: z
-    .string({
-      invalid_type_error: 'Latin Name must be a string',
-      required_error: 'Latin Name is Required',
-    })
-    .min(2)
-    .max(255),
-  digitalName: z.number({
-    invalid_type_error: 'Digital Name must be a number',
-    required_error: 'Digital Name is Required',
-  }),
-  floor: z.number({
-    invalid_type_error: 'Floor must be a number',
-    required_error: 'Floor is Required',
-  }),
-  area: z
-    .number({
-      invalid_type_error: 'Area must be a number',
-      required_error: 'Area is Required',
-    })
-    .min(1, {
-      message: 'Area must be greater than 0',
-    }),
-  direction: z.string({
-    invalid_type_error: 'Direction must be a string',
-    required_error: 'Direction is Required',
-  }),
-  elevators: z
-    .string({
-      invalid_type_error: 'Elevators must be a string',
-    })
-    .array()
-    .optional(),
-}) satisfies SafePropertySchema
 
 export type SafeAgent = OmitMultiple<Agent, 'updatedAt' | 'createdAt' | 'deletedAt' | 'id'>
 type SafeAgentSchema = z.ZodType<SafeAgent>
@@ -253,3 +143,56 @@ export const agentSchema = z.object({
     .max(255),
   investorId: UUID,
 }) satisfies SafeAgentSchema
+
+export type SafeInvestment = OmitMultiple<Investment, 'updatedAt' | 'createdAt' | 'deletedAt' | 'id' | 'bank'> & {
+  bank: z.infer<typeof BankDataSchema>
+}
+type SafeInvestmentSchema = z.ZodType<SafeInvestment>
+/** Investment Zod Schema */
+export const investmentSchema = z.object({
+  type: z.enum([InvestmentType.BONDS, InvestmentType.CERTIFICATES], {
+    invalid_type_error: 'Investment Type must be a valid type',
+    required_error: 'Investment Type is Required',
+  }),
+  amount: z
+    .number({
+      invalid_type_error: 'Investment Amount must be a number',
+      required_error: 'Investment Amount is Required',
+    })
+    .min(1, {
+      message: 'Investment Amount must be greater than 0',
+    }),
+  valueOnMaturity: z
+    .number({
+      invalid_type_error: 'Investment valueOnMaturity must be a number',
+      required_error: 'Investment valueOnMaturity is Required',
+    })
+    .min(1, {
+      message: 'Investment Amount must be greater than 0',
+    }),
+  interestRate: z
+    .number({
+      invalid_type_error: 'Investment Interest Rate must be a number',
+      required_error: 'Investment Interest Rate is Required',
+    })
+    .max(1, {
+      message: 'Investment Interest Rate must be less than 1',
+    })
+    .min(0.01, {
+      message: 'Investment Interest Rate must be greater than 0.01',
+    }),
+  redemptionDate: z
+    .date({
+      invalid_type_error: 'Investment Redemption Date must be a date',
+      required_error: 'Investment Redemption Date is Required',
+    })
+    .min(new Date(), {
+      message: 'Investment Redemption Date must be greater than today',
+    }),
+  bank: BankDataSchema,
+
+  customId: z.string().nullable(),
+  investorId: UUID,
+  createdById: UUID,
+  redeemed: z.boolean().nullable(),
+}) satisfies SafeInvestmentSchema

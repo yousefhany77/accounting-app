@@ -1,21 +1,43 @@
-version: '3'
+version: '3.9'
+
+
 
 services:
   db:
     image: postgres:alpine
     restart: always
+    container_name: postgres
     environment:
       POSTGRES_USER: myuser
       POSTGRES_PASSWORD: mypassword
       POSTGRES_DB: firstTradeUnion
     volumes:
-      - ./data:/var/lib/postgresql/data
+      - ${PWD}/data/postgres:/var/lib/postgresql/data
     ports:
       - '5432:5432'
+  
   redis:
     image: redis:alpine
+    restart: always
+    container_name: redis
     ports:
       - '6379:6379'
     volumes:
-      - ./data/redis:/data
+      - ${PWD}/data/redis:/data
     command: redis-server  --appendonly yes
+  
+
+  node:
+    build: .
+    command: bash -c 'npx prisma migrate dev || echo "Database is already in sync"; npm start'
+    restart: always
+    volumes:
+      - .:/app/api
+      - /app/api/node_modules
+    ports:
+      - '3000:3000'
+      - '5555:5555'
+    depends_on:
+      - db
+      - redis
+ 

@@ -1,11 +1,11 @@
 import { z } from 'zod'
 import { envSchema } from './util/validateEnv'
-import { Token } from './util/tokenStore'
+import { DecodedToken } from './util/tokenStore'
 
 export declare global {
   namespace Express {
     interface Request {
-      user?: Token
+      user?: DecodedToken
     }
   }
   namespace NodeJS {

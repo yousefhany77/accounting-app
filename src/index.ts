@@ -4,14 +4,16 @@ import { config } from 'dotenv'
 import express from 'express'
 import helmet from 'helmet'
 import morgan from 'morgan'
+// eslint-disable-next-line import/order
 import { HttpError, errorHandler } from './middleware/errorHandler'
 import { handleMethodNotAllowed } from './middleware/handleMethodNotAllowed'
 import { withAuth } from './middleware/withAuth'
 import { agentRouter } from './routes/agent'
 import { authRouter } from './routes/auth'
-import { expensesRouter } from './routes/expense'
+import { docsRouter } from './routes/doc'
+import { investmentsRouter } from './routes/investments'
 import investorsRouter from './routes/investor'
-import { propertyRouter } from './routes/property'
+import { thumbnailRouter } from './routes/thumnails'
 import { validateEnv } from './util/validateEnv'
 
 config()
@@ -20,7 +22,7 @@ const app = express()
 // Middleware
 app.use(
   cors({
-    origin: ['http://localhost:3000', Frontend_URL],
+    origin: [Frontend_URL],
     optionsSuccessStatus: 200,
     credentials: true,
   })
@@ -40,13 +42,13 @@ app.use('*', withAuth)
 
 // Routes
 app.use('/investor', investorsRouter)
-app.use('/expense', expensesRouter)
-app.use('/property', propertyRouter)
+app.use('/investment', investmentsRouter)
 app.use('/agent', agentRouter)
+app.use('/doc', docsRouter)
+app.use('/thumbnails', thumbnailRouter)
 app.all('/', handleMethodNotAllowed)
-
 app.all('/*', (req) => {
-  throw new HttpError('NOT_FOUND', req.originalUrl + ' Not Found')
+  throw new HttpError('NOT_FOUND', 'the route' + req.originalUrl + ' Not Found')
 })
 
 const port = process.env.PORT || 3000

@@ -1,6 +1,12 @@
 import { Router } from 'express'
 import asyncHandler from 'express-async-handler'
-import { createAgent, getAgentById, linkAgentToInvestor, unlinkAgentFromInvestor } from '../controllers/agent'
+import {
+  createAgent,
+  getAgentById,
+  getAgentsByInvestorId,
+  linkAgentToInvestor,
+  unlinkAgentFromInvestor,
+} from '../controllers/agent'
 import { handleMethodNotAllowed } from '../middleware/handleMethodNotAllowed'
 
 export const agentRouter = Router()
@@ -11,6 +17,17 @@ agentRouter
     asyncHandler(async (req, res) => {
       const createdAgent = await createAgent(req.body)
       res.status(201).json(createdAgent)
+    })
+  )
+  .all(handleMethodNotAllowed)
+
+agentRouter
+  .route('/investor/:id')
+  .get(
+    asyncHandler(async (req, res) => {
+      const { id } = req.params
+      const agents = await getAgentsByInvestorId(id)
+      res.status(200).json(agents)
     })
   )
   .all(handleMethodNotAllowed)

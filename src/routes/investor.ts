@@ -1,4 +1,4 @@
-import express from 'express'
+import { Router } from 'express'
 import asyncHandler from 'express-async-handler'
 import {
   createInvestor,
@@ -9,7 +9,7 @@ import {
 } from '../controllers/investor'
 import { handleMethodNotAllowed } from '../middleware/handleMethodNotAllowed'
 
-const investorsRouter = express.Router()
+const investorsRouter = Router()
 
 /**
  * This is the router for the investor resource.
@@ -24,7 +24,8 @@ investorsRouter
   .get(
     asyncHandler(async (req, res) => {
       const page = Number(req.query.page) || 1
-      const investors = await getAllInvestorsPaginated(page)
+      const includeDeleted = req.query.deleted === 'true'
+      const investors = await getAllInvestorsPaginated(page, includeDeleted)
       res.status(200).json(investors)
     })
   )
@@ -40,13 +41,24 @@ investorsRouter
       res.status(200).json(investors)
     })
   )
+  .patch(
+    asyncHandler(async (req, res) => {
+      const { investorId } = req.body
+      const investor = await updateInvestor(investorId, { deletedAt: null })
+      res.status(200).json(investor)
+    })
+  )
   .all(handleMethodNotAllowed)
 
 investorsRouter
   .route('/new')
   .post(
     asyncHandler(async (req, res) => {
-      const investor = await createInvestor(req.body)
+      const userId = req.user?.userId
+      const investor = await createInvestor({
+        ...req.body,
+        updatedBy: userId,
+      })
       res.status(201).json(investor)
     })
   )

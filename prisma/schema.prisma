@@ -20,28 +20,8 @@ model Agent {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  docs       Docs[]
-  investor   Investor @relation(fields: [investorId], references: [id])
+  investor   Investor @relation(fields: [investorId], references: [id], onDelete: Cascade)
   investorId String
-}
-
-model Property {
-  id          String    @id @default(uuid())
-  latinName   String
-  digitalName Int       @unique
-  floor       Int
-  direction   String
-  area        Float
-  elevators   String[]
-
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-
-  docs               Docs[]
-  investor           Investor?           @relation(fields: [investorId], references: [id])
-  investorId         String?
-  MaintenanceExpense MaintenanceExpense?
 }
 
 model Investor {
@@ -54,6 +34,8 @@ model Investor {
   bank    Json[]
   agent   Agent[]
 
+  balance Float @default(0.0)
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
@@ -61,10 +43,7 @@ model Investor {
   user      User   @relation("updatedBy", fields: [updatedBy], references: [id])
   updatedBy String
 
-  properties         Property[]
-  investments        Investment[]
-  Expensies          Expenses[]
-  maintenanceExpense MaintenanceExpense[]
+  investments Investment[]
 }
 
 enum InvestmentType {
@@ -75,24 +54,23 @@ enum InvestmentType {
 model Investment {
   id String @id @default(uuid())
 
-  type                   InvestmentType
-  amount                 Float          @default(0.0)
-  interestRate           Float          @default(1.0)
-  createdAt              DateTime       @default(now())
-  redemptionDate         DateTime
-  bank                   Json
-  earlyRedemptionPenalty Float?         @default(0.0)
-  customId               String?        @unique
+  type            InvestmentType
+  amount          Float          @default(0.0)
+  interestRate    Float          @default(1.0)
+  createdAt       DateTime       @default(now())
+  redemptionDate  DateTime
+  redeemed        Boolean?        @default(false)
+  bank            Json
+  valueOnMaturity Float          @default(0.0)
+  customId        String?        @unique
 
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  docs Docs[]
-
-  investor   Investor @relation(fields: [investorId], references: [id])
+  investor   Investor @relation(fields: [investorId], references: [id], onDelete: Cascade)
   investorId String
 
-  createdBy   User   @relation(fields: [createdById], references: [id])
+  createdBy   User   @relation(fields: [createdById], references: [id] )
   createdById String
 }
 
@@ -108,57 +86,15 @@ model User {
   Investor   Investor[]   @relation("updatedBy")
 }
 
-model Expenses {
-  id            String @id @default(uuid())
-  name          String
-  amount        Float
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-
-  paid Float  @default(0.0)
-  doc  Docs[]
-
-  byInvestor Investor @relation(fields: [forInvestorId], references: [id])
-  forInvestorId String
-}
-
-model MaintenanceExpense {
-  id     String @id @default(uuid())
-  amount Float
-  paid   Float  @default(0.0)
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-
-  doc        Docs[]
-  property   Property @relation(fields: [propertyId], references: [id])
-  propertyId String   @unique
-
-  investors  Investor? @relation(fields: [investorId], references: [id])
-  investorId String?   @unique
-}
-
 model Docs {
-  id        String    @id @default(uuid())
+  id String @id @default(uuid())
+
   name      String
   url       String
+  thumbnail String?
   type      String
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
-
-  // Relations
-  Expenses             Expenses?           @relation(fields: [expensesId], references: [id])
-  expensesId           String?
-  MaintenanceExpense   MaintenanceExpense? @relation(fields: [maintenanceExpenseId], references: [id])
-  maintenanceExpenseId String?
-  Investment           Investment?         @relation(fields: [investmentId], references: [id])
-  investmentId         String?
-  Property             Property?           @relation(fields: [propertyId], references: [id])
-  propertyId           String?
-  Agent                Agent?              @relation(fields: [agentId], references: [id])
-  agentId              String?
 }

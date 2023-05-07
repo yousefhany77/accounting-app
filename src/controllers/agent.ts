@@ -20,6 +20,16 @@ export const createAgent = async (agent: SafeAgent) => {
       const errors = enhanceZodErrorMessage(data.error)
       throw new HttpError('BAD_REQUEST', `Invalid data: ${errors}`)
     }
+    // soft delete the old agent (this is a business rule)
+    await prisma.agent.updateMany({
+      where: {
+        investorId: agent.investorId,
+      },
+      data: {
+        deletedAt: new Date(),
+      },
+    })
+
     const newAgent = await prisma.agent.create({
       data: agent,
     })
@@ -35,6 +45,19 @@ export const getAgentById = async (id: string) => {
     const agent = await prisma.agent.findUnique({
       where: {
         id,
+      },
+    })
+    return agent
+  } catch (error: unknown) {
+    handleAsyncError(error)
+  }
+}
+export const getAgentsByInvestorId = async (investorId: string) => {
+  try {
+    isValidUUID(investorId)
+    const agent = await prisma.agent.findMany({
+      where: {
+        investorId,
       },
     })
     return agent

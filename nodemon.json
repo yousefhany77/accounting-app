@@ -1,5 +1,5 @@
 {
   "watch": ["src", "test"],
   "ext": ".ts ,.js",
-  "exec": "ts-node ./src/index.ts"
+  "exec": "ts-node --require=dotenv/config ./src/index.ts"
 }

@@ -24,6 +24,7 @@ authRouter
       res.status(200).json({
         success: true,
         message: 'Login successful',
+        token: tokens.accessToken,
       })
     })
   )
@@ -50,7 +51,9 @@ authRouter
   .route('/register')
   .post(
     asyncHandler(async (req, res) => {
-      const { email, password, name } = req.body
+      const { email, password, name, registertionKey } = req.body
+      if (!registertionKey || registertionKey !== process.env.REGISTERATION_KEY)
+        throw new HttpError('FORBIDDEN', `Invalid registertion key`)
       const tokens = await register({ email, password, name })
       if (!tokens) throw new HttpError('UNAUTHORIZED', `Invalid credentials`) // this is not necessary the login function handles that, but it's for typeScript
       res.cookie('accessToken', tokens.accessToken, {
@@ -61,6 +64,7 @@ authRouter
       res.status(201).json({
         success: true,
         message: 'Registered successful',
+        token: tokens.accessToken,
       })
     })
   )

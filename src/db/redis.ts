@@ -1,10 +1,12 @@
+import { config } from 'dotenv'
 import Redis from 'ioredis'
 
 let redisClient: Redis
 
 const getRedisClient = (): Redis => {
+  config()
   if (!redisClient) {
-    redisClient = new Redis()
+    redisClient = new Redis(process.env.REDIS_URL)
   }
 
   return redisClient

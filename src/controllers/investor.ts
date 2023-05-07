@@ -1,11 +1,12 @@
 import { Investor } from '@prisma/client'
 import prisma from '../db'
 import { HttpError } from '../middleware/errorHandler'
+import { enhanceInvestments } from '../util/enhanceInvestments'
+import { enhanceZodErrorMessage } from '../util/enhanceZodErrorMessage'
 import { handleAsyncError } from '../util/handleAsyncError'
 import { investorSchema } from '../util/shared/schema'
 import { OmitMultiple } from '../util/types'
 import { isValidUUID } from '../util/validateUUID'
-import { enhanceZodErrorMessage } from '../util/enhanceZodErrorMessage'
 
 export type SafeInvestor = OmitMultiple<Investor, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'> & {
   /** use the DeletedAt if the value is null then the investor is not deleted it will be fetched with the rest of investors  */
@@ -26,13 +27,10 @@ export const getInvestorById = async (id: string) => {
             deletedAt: 'asc',
           },
         },
-        Expensies: true,
         investments: true,
-        maintenanceExpense: true,
-        properties: true,
       },
     })
-
+    investor.investments = enhanceInvestments(investor.investments)
     return investor
   } catch (error: unknown) {
     handleAsyncError(error)
@@ -48,16 +46,29 @@ export const getAllInvestorsPaginated = async (page = 1, deleted = false) => {
       skip: (page - 1) * 50,
       take: 50,
       where: {
-        deletedAt: deleted ? { not: null } : null,
+        ...(deleted ? {} : { deletedAt: null }),
       },
       orderBy: {
         code: 'asc',
       },
+
       include: {
-        _count: true,
+        investments: true,
+        agent: true,
       },
     })
-    return investors
+    return investors.map((investor) => {
+      const { investments, ...rest } = investor
+      const sumROI = enhanceInvestments(investments).reduce((acc, curr) => {
+        return acc + curr.ROI
+      }, 0)
+      const ROI = sumROI / investments.length
+      return {
+        ...rest,
+        ROI,
+        investmentsCount: investments.length,
+      }
+    })
   } catch (error: unknown) {
     handleAsyncError(error)
   }
@@ -68,6 +79,10 @@ export const createInvestor = async (investor: SafeInvestor) => {
     const data = investorSchema.safeParse(investor)
     if (!data.success) {
       const errors = enhanceZodErrorMessage(data.error)
+
+      if (data.error.flatten().fieldErrors.updatedBy) {
+        throw new HttpError('UNAUTHORIZED', `You are not authorized to create an investor`)
+      }
       throw new HttpError('BAD_REQUEST', `Invalid data: ${Object.values(errors).join(', ')}`)
     }
 

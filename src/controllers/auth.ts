@@ -42,11 +42,15 @@ const passwordSchema = (email: string) =>
     })
 
 export const signJWT = async (user: DecodedToken) => {
-  const accessToken = jwt.sign(user, process.env.JWT_ACCESS_TOKEN_SECRET_KEY, {
-    expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRES_IN,
-  })
-  await tokenStore.setToken(accessToken, user)
-  return accessToken
+  try {
+    const accessToken = jwt.sign(user, process.env.JWT_ACCESS_TOKEN_SECRET_KEY, {
+      expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRES_IN,
+    })
+    await tokenStore.setToken(accessToken, user)
+    return accessToken
+  } catch (error) {
+    handleAsyncError(error)
+  }
 }
 
 export const login = async (email: string, password: string) => {
@@ -91,7 +95,6 @@ export const login = async (email: string, password: string) => {
 }
 
 export const register = async (regData: { email: string; password: string; name: string }) => {
-  regData.email = regData.email.toLowerCase() // sanitize email
   try {
     const registerSchema = z.object({
       name: z.string({
@@ -103,7 +106,8 @@ export const register = async (regData: { email: string; password: string; name:
         })
         .email({
           message: 'Invalid email',
-        }),
+        })
+        .toLowerCase(),
       password: passwordSchema(regData.email),
     })
     const data = registerSchema.safeParse(regData)
